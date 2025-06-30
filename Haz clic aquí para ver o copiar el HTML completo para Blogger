@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport"/>
+<title>C ro - Red Social</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; }
+    header { background-color: #b22222; color: white; padding: 15px; text-align: center; font-size: 22px; }
+    nav, .container { max-width: 100%; padding: 16px; box-sizing: border-box; margin: auto; }
+    nav { background: #fff; border-bottom: 1px solid #ccc; display: flex; flex-wrap: wrap; justify-content: space-around; }
+    nav button {
+  display: block;
+  width: 100%;
+  text-align: left; background: none; border: none; font-size: 16px; color: #b22222; cursor: pointer; margin: 5px 0; }
+    input, textarea, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; }
+    button { background-color: #b22222; color: white; border: none; }
+    .hidden { display: none; }
+    .post { background: #f0f0f0; padding: 12px; margin-top: 15px; border-radius: 8px; }
+    .small { font-size: 13px; color: #555; }
+    .barra-notif { background:#fff3cd;color:#856404;padding:10px;text-align:center;font-size:14px; display:none; }
+    @media (max-width: 480px) {
+      header { font-size: 20px; padding: 12px; }
+      input, textarea, button { font-size: 15px; }
+      .post { font-size: 15px; }
+    }
+  
+.container.auth {
+  max-width: 400px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 30px 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.auth h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #b22222;
+}
+.auth input {
+  margin-bottom: 15px;
+}
+.auth p {
+  text-align: center;
+  font-size: 14px;
+}
+.auth a {
+  color: #b22222;
+  text-decoration: none;
+}
+
+body {
+  background: #f0f2f5;
+}
+header {
+  background-color: #B22222;
+}
+nav button {
+  color: #B22222;
+}
+button.post-btn {
+  background-color: #B22222;
+}
+.auth h3 {
+  color: #B22222;
+}
+.auth a {
+  color: #B22222;
+}
+
+nav { background: #1e1e1e; }
+body { background: #121212; color: #f5f5f5; }
+.container { background: #1c1c1c; color: #f5f5f5; }
+input, textarea { background: #2c2c2c; color: white; border: 1px solid #444; }
+
+@media (max-width: 600px) {
+  nav { display: none; }
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #1e1e1e;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid #333;
+    z-index: 1000;
+  }
+  .bottom-nav button {
+    background: none;
+    border: none;
+    color: #b22222;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<header>Bienvenido a C ro</header>
+<div class="barra-notif" id="notificaciones"></div>
+<div class="container auth" id="loginBox">
+<h3>Iniciar sesión</h3>
+<input autocomplete="username" id="loginUser" placeholder="Usuario" type="text"/>
+<input autocomplete="current-password" id="loginPass" placeholder="Contraseña" type="password"/>
+<button onclick="login()">Entrar</button>
+<p>¿No tienes cuenta? <a href="#" onclick="showRegister()">Regístrate</a></p>
+</div>
+<div class="container hidden auth" id="registerBox">
+<h3>Registro</h3>
+<input id="regUser" placeholder="Usuario" type="text"/>
+<input id="regPass" placeholder="Contraseña" type="password"/>
+<input id="regEmail" placeholder="Correo electrónico" type="email"/>
+<input id="regPhone" placeholder="Número de celular" type="tel"/>
+<label>Foto de perfil:</label>
+<input accept="image/*" id="regPhoto" type="file"/>
+<button onclick="register()">Registrar</button>
+<p>¿Ya tienes cuenta? <a href="#" onclick="showLogin()">Iniciar sesión</a></p>
+<input accept="image/*" id="regPhoto" type="file"/></div>
+<div class="hidden" id="appBox">
+<nav style="flex-direction: column; align-items: flex-start;">
+<button onclick="verPerfil()">Mi perfil</button>
+<button onclick="buscarUsuarios()">Buscar amigos</button>
+<button onclick="logout()">Cerrar sesión</button>
+</nav>
+<div class="container">
+<textarea id="postText" placeholder="¿Qué estás pensando?"></textarea>
+<input accept="image/*" id="postImage" type="file"/>
+<button onclick="publicar()">Publicar</button>
+<div id="feed"></div>
+</div>
+<!-- Perfil -->
+<div class="container hidden" id="perfilBox">
+<h3>Mi perfil</h3>
+<p><strong>Foto de perfil:</strong><br/>
+<img height="80" id="vistaFoto" src="" style="border-radius:50%;object-fit:cover;" width="80"/><br/>
+<input accept="image/*" onchange="subirFoto(event)" type="file"/>
+</p>
+<p><strong>Usuario:</strong> <span id="perfilUsuario"></span></p>
+<button onclick="volverInicio()">Volver</button>
+<div class="hidden" id="perfilPublicar">
+<textarea id="perfilPostText" placeholder="Escribe algo en tu perfil..."></textarea>
+<button class="post-btn" onclick="publicarDesdePerfil()">Publicar</button>
+</div>
+</div>
+<!-- Buscar amigos -->
+<div class="container hidden" id="buscarBox">
+<h3>Buscar amigos</h3>
+<input id="buscarInput" oninput="filtrarUsuarios()" placeholder="Escribe el nombre del usuario..." type="text"/>
+<div id="listaUsuarios"></div>
+<button onclick="volverInicio()">Volver</button>
+</div>
+<script>
+  // Funciones para mostrar secciones
+function verPerfil() {
+  const user = localStorage.getItem("currentUser");
+  if (!user) return;
+  document.getElementById("perfilUsuario").textContent = user;
+  if (appBox) appBox.classList.add("hidden");
+  document.getElementById("perfilBox").classList.remove("hidden");
+}
+function buscarUsuarios() {
+  const actual = localStorage.getItem("currentUser");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  const amigos = JSON.parse(localStorage.getItem("amigos_" + actual) || "[]");
+  appBox.classList.add("hidden");
+  buscarBox.classList.remove("hidden");
+  listaUsuarios.innerHTML = "";
+  for (let user in users) {
+    if (user === actual) continue;
+    const yaAgregado = amigos.includes(user);
+    const div = document.createElement("div");
+    div.innerHTML = `<p><strong style="cursor:pointer;color:#B22222" onclick="verPerfilDe('${user}')">${user}</strong> ${yaAgregado ? "(Amigo)" : `<button onclick="agregarAmigo('${user}')">Agregar</button>`} <button onclick="abrirChat('${user}')">Chatear</button></p>`;
+    listaUsuarios.appendChild(div);
+  }
+}
+  if (appBox) appBox.classList.add("hidden");
+  document.getElementById("buscarBox").classList.remove("hidden");
+
+  const usuarios = JSON.parse(localStorage.getItem("users") || "{}");
+  const actual = localStorage.getItem("currentUser");
+  let html = "";
+  for (let user in usuarios) {
+    if (user !== actual) {
+      html += `<p class="usuario-item"><strong>${user}</strong></p>`;
+    }
+  }
+  document.getElementById("listaUsuarios").innerHTML = html;
+}
+
+function filtrarUsuarios() {
+  const filtro = document.getElementById("buscarInput").value.toLowerCase();
+  const items = document.querySelectorAll(".usuario-item");
+  items.forEach(item => {
+    const nombre = item.textContent.toLowerCase();
+    item.style.display = nombre.includes(filtro) ? "block" : "none";
+  });
+}
+function editarPerfil() {
+  const user = localStorage.getItem("currentUser");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (!users[user]) return;
+  if (appBox) appBox.classList.add("hidden");
+  if (perfilBox) perfilBox.classList.add("hidden");
+  if (editarPerfilBox) editarPerfilBox.classList.remove("hidden");
+  editEmail.value = users[user].email;
+  editPhone.value = users[user].phone;
+}
+
+function guardarPerfil() {
+  const user = localStorage.getItem("currentUser");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  users[user].email = editEmail.value;
+  users[user].phone = editPhone.value;
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Perfil actualizado");
+  volverInicio();
+}
+
+function volverInicio() {
+  if (perfilBox) perfilBox.classList.add("hidden");
+  if (buscarBox) buscarBox.classList.add("hidden");
+  if (chatBox) chatBox.classList.add("hidden");
+  if (editarPerfilBox) editarPerfilBox.classList.add("hidden");
+  if (appBox) appBox.classList.remove("hidden");
+}
+  document.getElementById("perfilBox").classList.add("hidden");
+  document.getElementById("buscarBox").classList.add("hidden");
+  if (appBox) appBox.classList.remove("hidden");
+}
+
+function eliminarPost(index) {
+  let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  posts.splice(index, 1);
+  localStorage.setItem("posts", JSON.stringify(posts));
+  mostrarPosts();
+}
+function mostrarComentarios(index) {
+  const posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  const div = document.getElementById("comentarios_" + index);
+  const comentario = prompt("Escribe un comentario:");
+  if (comentario) {
+    const user = localStorage.getItem("currentUser");
+    posts[index].comentarios = posts[index].comentarios || [];
+    posts[index].comentarios.push({ usuario: user, texto: comentario });
+    localStorage.setItem("posts", JSON.stringify(posts));
+    mostrarPosts();
+  }
+}
+
+function verPerfilUsuario(usuario) {
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (!users[usuario]) return alert("Usuario no encontrado");
+  if (appBox) appBox.classList.add("hidden");
+  if (perfilBox) perfilBox.classList.remove("hidden");
+  perfilUsuario.textContent = usuario;
+  perfilCorreo.textContent = users[usuario].email;
+  perfilCelular.textContent = users[usuario].phone;
+}
+
+// Código básico para simular login y muro
+  function showRegister() {
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("registerBox").classList.remove("hidden");
+  }
+  function showLogin() {
+    document.getElementById("registerBox").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+  }
+  function register() {
+    alert("Registro simulado (completar implementación)");
+    showLogin();
+  }
+  function login() {
+  const user = document.getElementById("loginUser").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (!users[user] || users[user].pass !== pass) {
+    alert("Usuario o contraseña incorrectos.");
+    return;
+  }
+  localStorage.setItem("currentUser", user);
+  loginBox.classList.add("hidden");
+  registerBox.classList.add("hidden");
+  appBox.classList.remove("hidden");
+  perfilBox.classList.add("hidden");
+  buscarBox.classList.add("hidden");
+  chatBox.classList.add("hidden");
+  editarPerfilBox.classList.add("hidden");
+  notificacionesBox.classList.add("hidden");
+  mostrarPosts();
+}
+  const user = document.getElementById("loginUser").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (!users[user] || users[user].pass !== pass) {
+    alert("Usuario o contraseña incorrectos.");
+    return;
+  }
+  localStorage.setItem("currentUser", user);
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("appBox").classList.remove("hidden");
+  mostrarPosts();
+}
+    const user = document.getElementById("loginUser").value.trim();
+    if (!user) return alert("Ingresa un usuario.");
+    localStorage.setItem("currentUser", user);
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("appBox").classList.remove("hidden");
+    mostrarPosts();
+  }
+  function logout() {
+    location.reload();
+  }
+  function publicar() {
+    const texto = document.getElementById("postText").value.trim();
+    if (!texto) return;
+    let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+    const user = localStorage.getItem("currentUser"); posts.unshift({ usuario: user, mensaje: texto, fecha: new Date().toLocaleString(), likes: 0 });
+    localStorage.setItem("posts", JSON.stringify(posts));
+    document.getElementById("postText").value = "";
+    mostrarPosts();
+  }
+  function mostrarPosts() {
+  const currentUser = localStorage.getItem("currentUser");
+    const posts = JSON.parse(localStorage.getItem("posts") || "[]");
+    const feed = document.getElementById("feed");
+    feed.innerHTML = "";
+    const amigos = JSON.parse(localStorage.getItem("amigos_" + currentUser) || "[]");
+  posts.forEach(post => {
+    if (post.usuario === currentUser || amigos.includes(post.usuario)) {
+      const div = document.createElement("div");
+      div.className = "post";
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+    const currentUser = localStorage.getItem("currentUser");
+    const foto = users[post.usuario]?.foto || "";
+    div.innerHTML = `
+      ${foto ? `<img src="${foto}" class="perfil-img">` : ""}
+      <div>
+        <p><strong>${post.usuario}</strong> <span class="small">${post.fecha}</span></p>
+        <p>${post.mensaje}</p>
+        ${post.usuario === currentUser ? `<button class="btn-mini" onclick="eliminarPost(${i})">🗑️ Eliminar</button>` : ""}
+      </div>
+    `;
+      feed.appendChild(div);
+    });
+  }
+
+function verPerfilDe(usuario) {
+  appBox.classList.add("hidden");
+  perfilBox.classList.remove("hidden");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  perfilUsuario.textContent = usuario;
+  perfilCorreo.textContent = users[usuario]?.email || "(oculto)";
+  perfilCelular.textContent = users[usuario]?.phone || "(oculto)";
+  const posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  feed.innerHTML = "";
+  posts.forEach(post => {
+    if (post.usuario === usuario) {
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `<p><strong>${post.usuario}</strong> <span class="small">${post.fecha}</span></p><p>${post.mensaje}</p>`;
+      feed.appendChild(div);
+    }
+  });
+}
+
+function publicarDesdePerfil() {
+  const texto = document.getElementById("perfilPostText").value.trim();
+  const user = localStorage.getItem("currentUser");
+  if (!texto) return;
+  let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  posts.unshift({ usuario: user, mensaje: texto, fecha: new Date().toLocaleString() });
+  localStorage.setItem("posts", JSON.stringify(posts));
+  document.getElementById("perfilPostText").value = "";
+  verPerfilDe(user); // Recargar su perfil
+}
+
+function verPerfilDe(usuario) {
+  appBox.classList.add("hidden");
+  perfilBox.classList.remove("hidden");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  perfilUsuario.textContent = usuario;
+  perfilCorreo.textContent = users[usuario]?.email || "(oculto)";
+  perfilCelular.textContent = users[usuario]?.phone || "(oculto)";
+
+  const isOwn = usuario === localStorage.getItem("currentUser");
+  document.getElementById("perfilPublicar").classList.toggle("hidden", !isOwn);
+
+  const posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  feed.innerHTML = "";
+  posts.forEach(post => {
+    if (post.usuario === usuario) {
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `<p><strong>${post.usuario}</strong> <span class="small">${post.fecha}</span></p><p>${post.mensaje}</p>`;
+      feed.appendChild(div);
+    }
+  });
+}
+
+
+function subirFoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const users = JSON.parse(localStorage.getItem("users") || "{}");
+    const user = localStorage.getItem("currentUser");
+    users[user].foto = e.target.result;
+    localStorage.setItem("users", JSON.stringify(users));
+    vistaFoto.src = e.target.result;
+    mostrarPosts(); // refrescar muro con nuevas fotos
+  };
+  reader.readAsDataURL(file);
+}
+
+function verPerfilDe(usuario) {
+  appBox.classList.add("hidden");
+  perfilBox.classList.remove("hidden");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  const userData = users[usuario] || {};
+  perfilUsuario.textContent = usuario;
+  perfilCorreo.textContent = userData.email || "(oculto)";
+  perfilCelular.textContent = userData.phone || "(oculto)";
+  const isOwn = usuario === localStorage.getItem("currentUser");
+  perfilPublicar.classList.toggle("hidden", !isOwn);
+  document.getElementById("vistaFoto").src = userData.foto || "https://placehold.co/80x80";
+
+  const posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  feed.innerHTML = "";
+  posts.forEach(post => {
+    if (post.usuario === usuario) {
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `<div class="perfil-header"><img class="foto-perfil" src="${obtenerFoto(post.usuario)}"><strong>${post.usuario}</strong><span class="small"> ${post.fecha}</span></div><p>${post.mensaje}</p>`;
+      feed.appendChild(div);
+    }
+  });
+}
+
+function obtenerFoto(usuario) {
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  return users[usuario]?.foto || "https://placehold.co/32x32";
+}
+
+function abrirChatDesdeNav() {
+  const amigos = JSON.parse(localStorage.getItem("amigos_" + localStorage.getItem("currentUser")) || "[]");
+  if (amigos.length > 0) {
+    abrirChat(amigos[0]);
+  } else {
+    alert("Agrega un amigo para iniciar el chat.");
+  }
+}
+</script>
+</div>
+<div class="bottom-nav">
+<button onclick="loadApp(localStorage.getItem('currentUser'))">🏠<br/>Inicio</button>
+<button onclick="verPerfil()">👤<br/>Perfil</button>
+<button onclick="buscarUsuarios()">👥<br/>Amigos</button>
+<button onclick="abrirChatDesdeNav()">💬<br/>Chat</button>
+<button onclick="alert('Próximamente')">🔔<br/>Notificaciones</button>
+</div>
+</body>
+</html>
